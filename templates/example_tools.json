@@ -1,0 +1,20 @@
+{
+    "search_api": {
+        "tool_name": "search_api",
+        "arguments": {
+            "query": "{}"
+        },
+        "return": "Any",
+        "docstring": "Search for an answer from a query string\n    Args:\n        query (dict[str, str]):  The input query to search\n    Returns:\n        The answer from search query",
+        "dependencies": [
+            "os",
+            "dotenv",
+            "tavily",
+            "dataclasses",
+            "typing"
+        ],
+        "module_path": "tools.websearch_tools",
+        "tool_type": "module",
+        "tool_call_id": "tool_a8a597de-ff1c-4ac8-9bbe-443c4b960b36"
+    }
+}
