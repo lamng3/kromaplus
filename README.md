@@ -13,3 +13,26 @@ source ~/.bashrc # or ~/.zshrc if you're using zsh
 conda init
 conda activate kromaplus
 ```
+
+3. Install dependencies
+
+```
+cd kromaplus
+pip install -r requirements.txt
+```
+
+4. Push code to GitHub
+
+```
+<!-- generate SSH key (if not yet) -->
+ssh-keygen -t ed25519 -C "your_email@example.com"
+
+<!-- add public key to github -->
+cat ~/.ssh/id_ed25519.pub
+
+<!-- change repo remote to SSH -->
+git remote set-url origin git@github.com:<username>/<repo_name>.git
+
+<!-- test connection -->
+ssh -T git@github.com
+```
