@@ -4,7 +4,12 @@
 
 1. Spin up a RunPod instance
 
+```
+choose 1 RTX A4500 ($0.25/hr) on Axolotl Docker image.
+```
+
 2. Create conda env
+
 ```
 conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/main
 conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/r
@@ -35,4 +40,10 @@ git remote set-url origin git@github.com:<username>/<repo_name>.git
 
 <!-- test connection -->
 ssh -T git@github.com
+```
+
+5. Play with the source in `main.py`
+
+```
+python main.py
 ```
