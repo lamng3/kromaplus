@@ -4,6 +4,7 @@ certifi==2025.7.14
 charset-normalizer==3.4.2
 filelock==3.18.0
 fsspec==2025.7.0
+gensim==4.3.3
 h11==0.16.0
 hf-xet==1.1.5
 hf_transfer==0.1.9
@@ -13,15 +14,17 @@ huggingface-hub==0.33.4
 idna==3.10
 iniconfig==2.1.0
 Jinja2==3.1.4
+joblib==1.5.1
 jsonpatch==1.33
 jsonpointer==3.0.0
--e git+ssh://git@github.com/lamng3/kromaplus.git@a95e194001685fe775860a5e3b6404537c96ef86#egg=kromaplus
+-e git+ssh://git@github.com/lamng3/kromaplus.git@9096d539fdb395ebb6e3fb60e2b875d4f2843e64#egg=kromaplus
 langchain-core==0.3.70
 langsmith==0.4.8
 MarkupSafe==2.1.5
 mpmath==1.3.0
 networkx==3.3
-numpy==2.3.1
+node2vec==0.5.0
+numpy==1.26.4
 nvidia-cublas-cu11==11.11.3.6
 nvidia-cuda-cupti-cu11==11.8.87
 nvidia-cuda-nvrtc-cu11==11.8.89
@@ -46,7 +49,9 @@ regex==2024.11.6
 requests==2.32.4
 requests-toolbelt==1.0.0
 safetensors==0.5.3
+scipy==1.13.1
 setuptools==78.1.1
+smart_open==7.3.0.post1
 sniffio==1.3.1
 sympy==1.13.3
 tenacity==9.1.2
@@ -61,4 +66,5 @@ typing-inspection==0.4.1
 typing_extensions==4.14.1
 urllib3==2.5.0
 wheel==0.45.1
+wrapt==1.17.2
 zstandard==0.23.0
