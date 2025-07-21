@@ -24,6 +24,7 @@ conda activate kromaplus
 ```
 cd kromaplus
 pip install -r requirements.txt
+pip install -e .
 ```
 
 4. Push code to GitHub
