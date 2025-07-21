@@ -1,6 +1,9 @@
 import torch
 from transformers import AutoTokenizer, AutoModel
 from typing import Optional, List, Sequence
+from kromaplus.algorithms.data_structures.graph import (
+    ConceptGraph, EquivalentClass
+)
 
 
 class TextEmbedding:
@@ -14,6 +17,26 @@ class TextEmbedding:
         self.model = AutoModel.from_pretrained(model_name)
         self.model.eval()
         self.model.to(self.device)
+
+    def compute_embedding(self, node: EquivalentClass):
+        """
+        build combined prompt from an equivalence class:
+            * include name and a short list of ground set examples
+        tokenize and embed the whole string
+        """
+        parts: List[str] = []
+        for concept in node.equiv_concepts:
+            seg = concept.name
+            if getattr(concept, "ground_set", None):
+                examples = ", ".join(concept.ground_set)
+                seg += f" (examples: {examples})"
+            parts.append(seg)
+        # join multiple concepts with a separator
+        prompt = " | ".join(parts)
+        emb = self.to_embedding(prompt)
+        # cache on the node
+        setattr(node, "embedding", emb)
+        return emb
 
     def to_embedding(
         self,

@@ -61,3 +61,30 @@ def test_learn_node2vec_tunable_dimensions(small_concept_graph):
         # all vectors should respect the requested dimensionality
         assert all(len(v) == dim for v in emb.values())
 
+def test_init_with_cg_populates_embs_keys(small_concept_graph):
+    # when constructed with a ConceptGraph, embds should already be populated
+    ge = GraphEmbedding(small_concept_graph)
+    # emb keys must exactly match node ids
+    assert set(ge.embs.keys()) == {"A", "B"}
+
+def test_compute_embedding_returns_list_and_matches_embs(small_concept_graph):
+    ge = GraphEmbedding(small_concept_graph)
+    # pick one node
+    eq_a = small_concept_graph.nodes["A"]
+    vec = ge.compute_embedding(eq_a)
+    # should pull directly from ge.embs
+    assert isinstance(vec, list)
+    assert vec == ge.embs["A"]
+    # default dimensions is 16
+    assert len(vec) == 16
+    # entries are floats and not all zero
+    assert all(isinstance(x, float) for x in vec)
+    assert not np.allclose(vec, [0.0] * 16)
+
+def test_compute_embedding_without_any_embeddings_raises():
+    ge = GraphEmbedding()
+    # a dummy equivalent class not in ge.embs
+    dummy = EquivalentClass([Concept(name="X")])
+    with pytest.raises(ValueError):
+        _ = ge.compute_embedding(dummy)
+

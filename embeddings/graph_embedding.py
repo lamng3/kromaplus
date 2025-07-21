@@ -2,15 +2,28 @@ import networkx as nx
 from node2vec import Node2Vec
 from typing import Optional
 from kromaplus.algorithms.data_structures.graph import (
-    ConceptGraph
+    ConceptGraph, EquivalentClass
 )
 
 class GraphEmbedding:
     def __init__(self, cg: Optional[ConceptGraph] = None):
         """if concept graph is passed, it will be converted to self.G"""
         self.G: nx.DiGraph = nx.DiGraph()
+        self.embs: dict[str, list[float]] = {}
         if cg:
             self.from_concept_graph(cg)
+            self.embs = self.learn_node2vec()
+
+    def compute_embedding(self, node: EquivalentClass):
+        """retrieve embedding based on graph"""
+        if not self.embs:
+            raise ValueError(
+                "No embeddings found: ensure you called from_concept_graph() and "
+                "then learn_node2vec() (or passed cg into __init__)."
+            )
+        if node.id not in self.embs:
+            self.embs = self.learn_node2vec()
+        return self.embs[node.id]
 
     def from_concept_graph(self, cg: ConceptGraph) -> nx.DiGraph:
         """populate self.G from a concept graph's nodes and edges"""
