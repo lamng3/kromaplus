@@ -36,6 +36,7 @@ class GraphEmbedding:
         if self.G.number_of_nodes() == 0:
             raise ValueError("GraphEmbedding.G is empty; call from_concept_graph() first.")
         # set up random walks
+        # [issue] tune parameters to have a better node2vec
         node2vec = Node2Vec(
             self.G, 
             dimensions=dimensions, 
