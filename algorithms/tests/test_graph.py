@@ -1,7 +1,7 @@
 import pytest
 from collections import defaultdict
 
-from kromaplus.algorithms.utils.graph import (
+from kromaplus.algorithms.data_structures.graph import (
     Concept, ConceptRelation,
     EquivalentClass, EquivalentClassRelation,
     DSU, ConceptGraph,
