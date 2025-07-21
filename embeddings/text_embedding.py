@@ -1,9 +1,8 @@
 import torch
 from transformers import AutoTokenizer, AutoModel
-from typing import Optional, List, Sequence
-from kromaplus.algorithms.data_structures.graph import (
-    ConceptGraph, EquivalentClass
-)
+from typing import Optional, List, Sequence, TYPE_CHECKING
+if TYPE_CHECKING:
+    from kromaplus.algorithms.data_structures.graph import ConceptGraph, EquivalentClass
 
 
 class TextEmbedding:
@@ -17,8 +16,10 @@ class TextEmbedding:
         self.model = AutoModel.from_pretrained(model_name)
         self.model.eval()
         self.model.to(self.device)
+        # expose embed dim
+        self.embed_dim = self.model.config.hidden_size
 
-    def compute_embedding(self, node: EquivalentClass):
+    def compute_embedding(self, node: "EquivalentClass") -> torch.Tensor:
         """
         build combined prompt from an equivalence class:
             * include name and a short list of ground set examples

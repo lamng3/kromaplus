@@ -40,24 +40,25 @@ def test_learn_node2vec_returns_embeddings_of_correct_shape(small_concept_graph)
     ge = GraphEmbedding(small_concept_graph)
     # use very small dims and walks for speed
     emb_dict = ge.learn_node2vec(
-        dimensions=8, walk_length=5, num_walks=10, window=3, epochs=1, workers=1
+        walk_length=5, num_walks=10, window=3, epochs=1, workers=1
     )
     # we should get embeddings for exactly the two nodes
     assert set(emb_dict.keys()) == {"A", "B"}
 
-    # each embedding should be a python list of floats of length 8
+    # each embedding should be a python list of floats of length ge.dimensions
     for vec in emb_dict.values():
         assert isinstance(vec, list)
-        assert len(vec) == 8
+        assert len(vec) == ge.dimensions
         # Check all entries are floats
         assert all(isinstance(x, float) for x in vec)
         # Check it’s not all zeros
-        assert not np.allclose(vec, [0.0] * 8)
+        assert not np.allclose(vec, [0.0] * ge.dimensions)
 
 def test_learn_node2vec_tunable_dimensions(small_concept_graph):
     ge = GraphEmbedding(small_concept_graph)
     for dim in (4, 12):
-        emb = ge.learn_node2vec(dimensions=dim, walk_length=5, num_walks=5, window=2, epochs=1)
+        ge.dimensions = dim
+        emb = ge.learn_node2vec(walk_length=5, num_walks=5, window=2, epochs=1)
         # all vectors should respect the requested dimensionality
         assert all(len(v) == dim for v in emb.values())
 
@@ -75,11 +76,11 @@ def test_compute_embedding_returns_list_and_matches_embs(small_concept_graph):
     # should pull directly from ge.embs
     assert isinstance(vec, list)
     assert vec == ge.embs["A"]
-    # default dimensions is 16
-    assert len(vec) == 16
+    # default dimensions is ge.dimensions
+    assert len(vec) == ge.dimensions
     # entries are floats and not all zero
     assert all(isinstance(x, float) for x in vec)
-    assert not np.allclose(vec, [0.0] * 16)
+    assert not np.allclose(vec, [0.0] * ge.dimensions)
 
 def test_compute_embedding_without_any_embeddings_raises():
     ge = GraphEmbedding()

@@ -52,10 +52,10 @@ def test_compute_embedding_caches_on_node(embedder):
     eq = EquivalentClass([c])
     # first call computes and caches
     e1 = embedder.compute_embedding(eq)
-    assert hasattr(eq, "embedding")
+    assert hasattr(eq, "text_embedding")
     # second call returns the same tensor object
     e2 = embedder.compute_embedding(eq)
-    assert e2 is eq.embedding
+    assert e2 is eq.text_embedding
     assert torch.allclose(e1, e2, atol=1e-6)
 
 def test_ground_set_changes_embedding(embedder):

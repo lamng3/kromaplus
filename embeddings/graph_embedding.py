@@ -1,33 +1,44 @@
+import torch
 import networkx as nx
 from node2vec import Node2Vec
-from typing import Optional
-from kromaplus.algorithms.data_structures.graph import (
-    ConceptGraph, EquivalentClass
-)
+from kromaplus.embeddings.text_embedding import TextEmbedding
+from typing import Optional, TYPE_CHECKING
+if TYPE_CHECKING:
+    from kromaplus.algorithms.data_structures.graph import ConceptGraph, EquivalentClass
+    
 
 class GraphEmbedding:
-    def __init__(self, cg: Optional[ConceptGraph] = None):
+    def __init__(
+        self, 
+        cg: Optional["ConceptGraph"] = None,
+        dimensions: int = None,
+        **n2v_kwargs,
+    ):
         """if concept graph is passed, it will be converted to self.G"""
+        # grab text dimension as a default
+        self.dimensions = dimensions or TextEmbedding().embed_dim
+        self.n2v_kwargs = n2v_kwargs
+
         self.G: nx.DiGraph = nx.DiGraph()
         self.embs: dict[str, list[float]] = {}
         if cg:
             self.from_concept_graph(cg)
             self.embs = self.learn_node2vec()
 
-    def compute_embedding(self, node: EquivalentClass):
-        """retrieve embedding based on graph"""
+    def compute_embedding(self, node: "EquivalentClass") -> torch.Tensor:
+        """retrieve graph‐embedding, caching on node.graph_embedding"""
         if not self.embs:
             raise ValueError(
-                "No embeddings found: ensure you called from_concept_graph() and "
-                "then learn_node2vec() (or passed cg into __init__)."
+                "No embeddings found: ensure you called from_concept_graph() and then learn_node2vec()"
             )
         if node.id not in self.embs:
+            # graph changed, retrain
             self.embs = self.learn_node2vec()
         emb = self.embs[node.id]
         setattr(node, "graph_embedding", emb)
         return emb
 
-    def from_concept_graph(self, cg: ConceptGraph) -> nx.DiGraph:
+    def from_concept_graph(self, cg: "ConceptGraph") -> nx.DiGraph:
         """populate self.G from a concept graph's nodes and edges"""
         self.G.clear()
         for n in cg.nodes.values():
@@ -38,7 +49,6 @@ class GraphEmbedding:
 
     def learn_node2vec(
         self,
-        dimensions: int = 16,
         walk_length: int = 10,
         num_walks: int = 50,
         p: float = 1.0,
@@ -46,32 +56,27 @@ class GraphEmbedding:
         workers: int = 1,
         window: int = 5,
         epochs: int = 1,
-    ):
+    ) -> dict[str, torch.Tensor]:
         """run node2vec on self.G and return a dict[node_id -> vector]"""
         if self.G.number_of_nodes() == 0:
-            raise ValueError("GraphEmbedding.G is empty; call from_concept_graph() first.")
+            raise ValueError("Empty graph")
         # set up random walks
         # [issue] tune parameters to have a better node2vec
         node2vec = Node2Vec(
             self.G, 
-            dimensions=dimensions, 
+            dimensions=self.dimensions,
             walk_length=walk_length,
             num_walks=num_walks,
-            p=p,
-            q=q,
+            p=p, q=q,
             workers=workers,
             weight_key="weight",
+            **self.n2v_kwargs,
         )
         # train skip-gram
-        model = node2vec.fit(
-            window=window,
-            min_count=1,
-            batch_words=4,
-            epochs=epochs,
-        )
+        model = node2vec.fit(window=window, min_count=1, epochs=epochs)
         # extract embeddings as plain Python lists
         return {
-            node: model.wv.get_vector(node).tolist()
+            node: torch.tensor(model.wv.get_vector(node), dtype=torch.float32)
             for node in self.G.nodes()
         }
 

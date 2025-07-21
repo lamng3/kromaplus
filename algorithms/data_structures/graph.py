@@ -1,6 +1,9 @@
 from __future__ import annotations
+import torch
 from typing import Optional, List, Set, Dict
 from collections import defaultdict
+from kromaplus.embeddings.text_embedding import TextEmbedding
+from kromaplus.embeddings.graph_embedding import GraphEmbedding
 
 class Concept:
     """concepts of an ontology"""
@@ -63,8 +66,41 @@ class EquivalentClass:
         self.rank = None # [issue] can we make rank update if ontology dynamically updates? 
         self.parents: List[EquivalentClass] = parents if parents is not None else []
         self.children: List[EquivalentClass] = children if children is not None else []
-        self.text_embedding = None
-        self.graph_embedding = None
+        self.text_embedding: torch.Tensor = None
+        self.graph_embedding: torch.Tensor = None
+
+    def compute_embedding(self, alpha: float = 0.5) -> torch.Tensor:
+        """
+        fuse graph- and text-embeddings into a single vector
+            z_c = alpha * graph_emb + (1-alpha) * text_emb
+        cache results in self.embedding
+        """
+        if hasattr(self, "embedding") and self.embedding is not None:
+            return self.embedding
+        # ensure text_embedding exists
+        if self.text_embedding is None:
+            # compute & cache
+            self.text_embedding = TextEmbedding().compute_embedding(self)
+            if self.text_embedding is None:
+                raise RuntimeError("TextEmbedding returned None")
+        # ensure graph_embedding exists
+        if self.graph_embedding is None:
+            # compute & cache
+            self.graph_embedding = GraphEmbedding().compute_embedding(self)
+            if self.graph_embedding is None:
+                raise RuntimeError("GraphEmbedding returned None")
+        # check dims match: should be matched by default
+        if self.graph_embedding.shape != self.text_embedding.shape:
+            raise ValueError(
+                f"Dimension mismatch: "
+                f"text {tuple(self.text_embedding.shape)}, "
+                f"graph {tuple(self.graph_embedding.shape)}"
+            )
+        # fuse and cache
+        # [issue] fusing is a bit strict: future work can relax this with learnable alpha
+        z = alpha * self.graph_embedding + (1.0 - alpha) * self.text_embedding
+        self.embedding = z
+        return z
 
     def compute_rank(self) -> int:
         # [issue] can we defer update to concept graph update or recompute rank?
