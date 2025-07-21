@@ -48,3 +48,9 @@ ssh -T git@github.com
 ```
 python main.py
 ```
+
+6. Unit Test
+
+```
+pytest
+```
