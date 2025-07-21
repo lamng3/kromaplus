@@ -3,7 +3,7 @@ import pytest
 from kromaplus.embeddings.text_embedding import TextEmbedding
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture
 def embedder():
     # singleton for all tests in this module
     return TextEmbedding()

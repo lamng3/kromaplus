@@ -1,7 +1,62 @@
 import networkx as nx
 from node2vec import Node2Vec
-
+from typing import Optional
+from kromaplus.algorithms.data_structures.graph import (
+    ConceptGraph
+)
 
 class GraphEmbedding:
-    def __init__(self):
-        pass
+    def __init__(self, cg: Optional[ConceptGraph] = None):
+        """if concept graph is passed, it will be converted to self.G"""
+        self.G: nx.DiGraph = nx.DiGraph()
+        if cg:
+            self.from_concept_graph(cg)
+
+    def from_concept_graph(self, cg: ConceptGraph) -> nx.DiGraph:
+        """populate self.G from a concept graph's nodes and edges"""
+        self.G.clear()
+        for n in cg.nodes.values():
+            self.G.add_node(n.id)
+        for e in cg.edges:
+            self.G.add_edge(e.src.id, e.tgt.id, weight=e.score)
+        return self.G
+
+    def learn_node2vec(
+        self,
+        dimensions: int = 16,
+        walk_length: int = 10,
+        num_walks: int = 50,
+        p: float = 1.0,
+        q: float = 1.0,
+        workers: int = 1,
+        window: int = 5,
+        epochs: int = 1,
+    ):
+        """run node2vec on self.G and return a dict[node_id -> vector]"""
+        if self.G.number_of_nodes() == 0:
+            raise ValueError("GraphEmbedding.G is empty; call from_concept_graph() first.")
+        # set up random walks
+        node2vec = Node2Vec(
+            self.G, 
+            dimensions=dimensions, 
+            walk_length=walk_length,
+            num_walks=num_walks,
+            p=p,
+            q=q,
+            workers=workers,
+            weight_key="weight",
+        )
+        # train skip-gram
+        model = node2vec.fit(
+            window=window,
+            min_count=1,
+            batch_words=4,
+            epochs=epochs,
+        )
+        # extract embeddings as plain Python lists
+        return {
+            node: model.wv.get_vector(node).tolist()
+            for node in self.G.nodes()
+        }
+
+    
