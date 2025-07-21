@@ -63,7 +63,8 @@ class EquivalentClass:
         self.rank = None # [issue] can we make rank update if ontology dynamically updates? 
         self.parents: List[EquivalentClass] = parents if parents is not None else []
         self.children: List[EquivalentClass] = children if children is not None else []
-        self.embedding = None
+        self.text_embedding = None
+        self.graph_embedding = None
 
     def compute_rank(self) -> int:
         # [issue] can we defer update to concept graph update or recompute rank?

@@ -23,7 +23,9 @@ class GraphEmbedding:
             )
         if node.id not in self.embs:
             self.embs = self.learn_node2vec()
-        return self.embs[node.id]
+        emb = self.embs[node.id]
+        setattr(node, "graph_embedding", emb)
+        return emb
 
     def from_concept_graph(self, cg: ConceptGraph) -> nx.DiGraph:
         """populate self.G from a concept graph's nodes and edges"""

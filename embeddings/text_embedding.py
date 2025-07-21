@@ -35,7 +35,7 @@ class TextEmbedding:
         prompt = " | ".join(parts)
         emb = self.to_embedding(prompt)
         # cache on the node
-        setattr(node, "embedding", emb)
+        setattr(node, "text_embedding", emb)
         return emb
 
     def to_embedding(
