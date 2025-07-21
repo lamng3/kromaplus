@@ -1,4 +1,5 @@
 import pytest
+import torch
 import numpy as np
 import networkx as nx
 from kromaplus.algorithms.data_structures.graph import (
@@ -38,21 +39,19 @@ def test_learn_node2vec_empty_graph_raises():
 
 def test_learn_node2vec_returns_embeddings_of_correct_shape(small_concept_graph):
     ge = GraphEmbedding(small_concept_graph)
-    # use very small dims and walks for speed
-    emb_dict = ge.learn_node2vec(
-        walk_length=5, num_walks=10, window=3, epochs=1, workers=1
-    )
-    # we should get embeddings for exactly the two nodes
+    # use very small walks for speed
+    emb_dict = ge.learn_node2vec(walk_length=5, num_walks=10, window=3, epochs=1, workers=1)
+    # should get embeddings for exactly the two nodes
     assert set(emb_dict.keys()) == {"A", "B"}
-
-    # each embedding should be a python list of floats of length ge.dimensions
+    # each embedding should be a torch.Tensor of length ge.dimensions
     for vec in emb_dict.values():
-        assert isinstance(vec, list)
-        assert len(vec) == ge.dimensions
-        # Check all entries are floats
-        assert all(isinstance(x, float) for x in vec)
-        # Check it’s not all zeros
-        assert not np.allclose(vec, [0.0] * ge.dimensions)
+        assert isinstance(vec, torch.Tensor)
+        assert vec.ndim == 1
+        assert vec.shape[0] == ge.dimensions
+        # dtype should be floating point
+        assert vec.dtype in (torch.float32, torch.float64)
+        # should not be the zero vector
+        assert not torch.allclose(vec, torch.zeros_like(vec))
 
 def test_learn_node2vec_tunable_dimensions(small_concept_graph):
     ge = GraphEmbedding(small_concept_graph)
@@ -68,19 +67,23 @@ def test_init_with_cg_populates_embs_keys(small_concept_graph):
     # emb keys must exactly match node ids
     assert set(ge.embs.keys()) == {"A", "B"}
 
-def test_compute_embedding_returns_list_and_matches_embs(small_concept_graph):
+def test_compute_embedding_returns_tensor_and_matches_embs(small_concept_graph):
     ge = GraphEmbedding(small_concept_graph)
-    # pick one node
     eq_a = small_concept_graph.nodes["A"]
+    # compute_embedding should return a torch.Tensor
     vec = ge.compute_embedding(eq_a)
-    # should pull directly from ge.embs
-    assert isinstance(vec, list)
-    assert vec == ge.embs["A"]
-    # default dimensions is ge.dimensions
-    assert len(vec) == ge.dimensions
-    # entries are floats and not all zero
-    assert all(isinstance(x, float) for x in vec)
-    assert not np.allclose(vec, [0.0] * ge.dimensions)
+    assert isinstance(vec, torch.Tensor)
+    # it should match what's stored in ge.embs (also a tensor)
+    stored = ge.embs["A"]
+    assert isinstance(stored, torch.Tensor)
+    assert torch.allclose(vec, stored, atol=1e-6)
+    # vector length should equal ge.dimensions
+    assert vec.ndim == 1
+    assert vec.shape[0] == ge.dimensions
+    # dtype should be floating point
+    assert vec.dtype in (torch.float32, torch.float64)
+    # it should not be the zero vector
+    assert not torch.allclose(vec, torch.zeros_like(vec))
 
 def test_compute_embedding_without_any_embeddings_raises():
     ge = GraphEmbedding()
