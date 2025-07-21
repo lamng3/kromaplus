@@ -23,6 +23,9 @@ class Concept:
             self.rank = 1 + max((child.compute_rank() for child in self.children), default=-1)
         return self.rank
 
+    def compute_embedding(self):
+        pass
+
     def add_parent(self, p: Concept):
         self.parents.append(p)
 

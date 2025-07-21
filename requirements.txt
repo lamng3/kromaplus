@@ -1,14 +1,23 @@
+annotated-types==0.7.0
+anyio==4.9.0
 certifi==2025.7.14
 charset-normalizer==3.4.2
 filelock==3.18.0
 fsspec==2025.7.0
+h11==0.16.0
 hf-xet==1.1.5
 hf_transfer==0.1.9
+httpcore==1.0.9
+httpx==0.28.1
 huggingface-hub==0.33.4
 idna==3.10
 iniconfig==2.1.0
 Jinja2==3.1.4
--e git+ssh://git@github.com/lamng3/kromaplus.git@0e9acbde1e73c89e146599a4a42393f5d49e836c#egg=kromaplus
+jsonpatch==1.33
+jsonpointer==3.0.0
+-e git+ssh://git@github.com/lamng3/kromaplus.git@a95e194001685fe775860a5e3b6404537c96ef86#egg=kromaplus
+langchain-core==0.3.70
+langsmith==0.4.8
 MarkupSafe==2.1.5
 mpmath==1.3.0
 networkx==3.3
@@ -24,17 +33,23 @@ nvidia-cusolver-cu11==11.4.1.48
 nvidia-cusparse-cu11==11.7.5.86
 nvidia-nccl-cu11==2.21.5
 nvidia-nvtx-cu11==11.8.86
+orjson==3.11.0
 packaging==25.0
 pillow==11.0.0
 pluggy==1.6.0
+pydantic==2.11.7
+pydantic_core==2.33.2
 Pygments==2.19.2
 pytest==8.4.1
 PyYAML==6.0.2
 regex==2024.11.6
 requests==2.32.4
+requests-toolbelt==1.0.0
 safetensors==0.5.3
 setuptools==78.1.1
+sniffio==1.3.1
 sympy==1.13.3
+tenacity==9.1.2
 tokenizers==0.21.2
 torch==2.7.1+cu118
 torchaudio==2.7.1+cu118
@@ -42,6 +57,8 @@ torchvision==0.22.1+cu118
 tqdm==4.67.1
 transformers==4.53.2
 triton==3.3.1
+typing-inspection==0.4.1
 typing_extensions==4.14.1
 urllib3==2.5.0
 wheel==0.45.1
+zstandard==0.23.0
