@@ -17,7 +17,7 @@ def small_concept_graph():
     a = EquivalentClass([Concept(name="A")])
     b = EquivalentClass([Concept(name="B")])
     # create a relation A -> B with score 0.5
-    rel = EquivalentClassRelation(src=a, tgt=b, score=0.5)
+    rel = EquivalentClassRelation(src=a, tgt=b, relation="yes", score=0.5)
     # build and return the ConceptGraph
     cg = ConceptGraph(nodes=[a, b], edges=[rel])
     return cg

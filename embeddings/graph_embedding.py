@@ -1,10 +1,10 @@
 import torch
 import networkx as nx
 from node2vec import Node2Vec
-from kromaplus.embeddings.text_embedding import TextEmbedding
+from embeddings.text_embedding import TextEmbedding
 from typing import Optional, TYPE_CHECKING
 if TYPE_CHECKING:
-    from kromaplus.algorithms.data_structures.graph import ConceptGraph, EquivalentClass
+    from algorithms.data_structures.graph import ConceptGraph, EquivalentClass
     
 
 class GraphEmbedding:

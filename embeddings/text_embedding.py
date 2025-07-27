@@ -2,7 +2,7 @@ import torch
 from transformers import AutoTokenizer, AutoModel
 from typing import Optional, List, Sequence, TYPE_CHECKING
 if TYPE_CHECKING:
-    from kromaplus.algorithms.data_structures.graph import ConceptGraph, EquivalentClass
+    from algorithms.data_structures.graph import ConceptGraph, EquivalentClass
 
 
 class TextEmbedding:

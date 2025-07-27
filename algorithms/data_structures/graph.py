@@ -2,8 +2,8 @@ from __future__ import annotations
 import torch
 from typing import Optional, List, Set, Dict
 from collections import defaultdict
-from kromaplus.embeddings.text_embedding import TextEmbedding
-from kromaplus.embeddings.graph_embedding import GraphEmbedding
+from embeddings.text_embedding import TextEmbedding
+from embeddings.graph_embedding import GraphEmbedding
 
 class Concept:
     """concepts of an ontology"""
@@ -108,16 +108,54 @@ class EquivalentClass:
             self.rank = 1 + max((child.compute_rank() for child in self.children), default=-1)
         return self.rank
 
+    def members(self) -> str:
+        """get members within an equivalent class"""
+        return ", ".join(c.name for c in self.equiv_concepts)
+
+    def describe(self) -> str:
+        """narrative summary of an equivalent class and its relations"""
+        members   = self.members() or "none"
+        parents  = ", ".join(p.members() for p in self.parents) or "none"
+        children = ", ".join(c.members() for c in self.children)  or "none"
+        return (
+            f"This equivalence class, comprised of {members}, "
+            "brings together semantically aligned concepts into a unified whole. "
+            f"It is rooted in the broader notions of {parents}, from which it descends, "
+            f"and it branches out to give rise to {children} as its sub-concepts."
+        )
+
     def __repr__(self) -> str:
         names = [c.name for c in self.equiv_concepts]
         return f"EquivalentClass(id={self.id!r}, concepts={names})"
 
 class EquivalentClassRelation:
     """relations between equivalent classes"""
-    def __init__(self, src: EquivalentClass, tgt: EquivalentClass, score: float = 0.0):
+    def __init__(
+        self, 
+        src: EquivalentClass, 
+        tgt: EquivalentClass, 
+        relation: str, 
+        score: float = 0.0
+    ):
+        assert relation in ("yes", "no"), "relation must be 'yes' or 'no'"
         self.src = src
         self.tgt = tgt
+        self.relation = relation
         self.score = score
+
+    def describe(self) -> str:
+        source_summary = self.src.describe()
+        target_summary = self.tgt.describe()
+        relation_label = (
+            "semantically equivalent"
+            if self.relation == "yes"
+            else "not semantically equivalent"
+        )
+        return (
+            f"Equivalence class A: {source_summary}; "
+            f"Equivalence class B: {target_summary}. "
+            f"Equivalence class A are {relation_label} to equivalence class B."
+        )
 
     # [issue] test representation of this repr
     def __repr__(self) -> str:

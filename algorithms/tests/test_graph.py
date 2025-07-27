@@ -22,7 +22,7 @@ def test_concept_graph_no_cycle_and_ranks():
     eq_ab = EquivalentClass([a, b])
     eq_c  = EquivalentClass([c])
     # eq_ab → eq_c
-    rel = EquivalentClassRelation(eq_ab, eq_c, score=1.0)
+    rel = EquivalentClassRelation(eq_ab, eq_c, "yes", score=1.0)
     cg = ConceptGraph(nodes=[eq_ab, eq_c], edges=[rel])
     # no cycle here
     assert cg.has_cycle() is False
@@ -35,8 +35,8 @@ def test_concept_graph_with_cycle():
     # build two classes and add mutual edges
     x_cls = EquivalentClass([Concept("X")])
     y_cls = EquivalentClass([Concept("Y")])
-    rel1 = EquivalentClassRelation(x_cls, y_cls)
-    rel2 = EquivalentClassRelation(y_cls, x_cls)
+    rel1 = EquivalentClassRelation(x_cls, y_cls, "yes")
+    rel2 = EquivalentClassRelation(y_cls, x_cls, "yes")
     cg = ConceptGraph(nodes=[x_cls, y_cls], edges=[rel1, rel2])
     # mutual edges form a cycle
     assert cg.has_cycle() is True
@@ -75,7 +75,7 @@ def test_equivalent_class_and_relation_repr():
     assert "EquivalentClass(id='A'" in r
     assert "concepts=['A', 'B']" in r
     # create a relation between two eq classes
-    eq_rel = EquivalentClassRelation(eq_ab, eq_c, score=0.99)
+    eq_rel = EquivalentClassRelation(eq_ab, eq_c, "yes", score=0.99)
     s = repr(eq_rel)
     assert "src=EquivalentClass" in s
     assert "tgt=EquivalentClass" in s
@@ -87,7 +87,7 @@ def test_concept_graph_basic_adjacency_and_ranks():
     eq_ab = EquivalentClass([a, b])
     eq_c  = EquivalentClass([c])
     # define a single relation eq_ab → eq_c
-    rel = EquivalentClassRelation(eq_ab, eq_c, score=1.0)
+    rel = EquivalentClassRelation(eq_ab, eq_c, "yes", score=1.0)
     # build graph
     cg = ConceptGraph(nodes=[eq_ab, eq_c], edges=[rel])
     # children/parents lookup
