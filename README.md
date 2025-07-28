@@ -14,7 +14,7 @@ choose 1 RTX A4500 ($0.25/hr) on Axolotl Docker image.
 conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/main
 conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/r
 conda create --name kromaplus python=3.12 -y
-source ~/.bashrc # or ~/.zshrc if you're using zsh
+source ~/.bashrc
 conda init
 conda activate kromaplus
 ```
