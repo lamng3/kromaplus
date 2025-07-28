@@ -9,33 +9,29 @@ from algorithms.data_structures.graph import (
 )
 
 
-class HypergraphView(ConceptGraph):
+class HypergraphView:
     """
     a concept can only belong to one equivalence class
     a hyperedge can contain multiple concepts coming from multiple equivalence classes
     """
     def __init__(
         self,
-        eq_classes: Optional[List[EquivalentClass]] = None,
-        eq_relations: Optional[List[EquivalentClassRelation]] = None,
-        extra_hyperedges: Optional[Dict[str, Set[Concept]]] = None,
+        graph: ConceptGraph,
+        hyperedges: Optional[Dict[str, Set[Concept]]] = None,
     ):  
-        # initialize concept graph
-        super().__init__(nodes=eq_classes or [], edges=eq_relations or [])
-        
         # hypergraph view
         self.hyperedges: Dict[str, Set[Concept]] = {}
         self.incidence: Dict[Concept, Set[str]] = defaultdict(set) # fast lookup which edges a node belongs to
         
         # register each equivalence class as a hyperedge by its id
-        if eq_classes:
-            for eq in eq_classes:
+        if graph.nodes:
+            for eq in graph.nodes:
                 members = set(eq.equiv_concepts)
                 self._register_hyperedge(eq.id, members)
 
         # register any extra hyperedges
-        if extra_hyperedges:
-            for eid, members in extra_hyperedges.items():
+        if hyperedges:
+            for eid, members in hyperedges.items():
                 self._register_hyperedge(eid, members)
 
     def _register_hyperedge(self, edge_id: str, members: Set[Concept]) -> None:
@@ -83,7 +79,7 @@ class HypergraphView(ConceptGraph):
     def __str__(self) -> str:
         return
 
-class MultigraphView(ConceptGraph):
+class MultigraphView:
     """
     allow multiple parallel edges and loops.
     edges allow more than one edge between same two vertices, and self-loops.
@@ -93,13 +89,9 @@ class MultigraphView(ConceptGraph):
     """
     def __init__(
         self,
-        eq_classes: Optional[List[EquivalentClass]] = None,
-        eq_relations: Optional[List[EquivalentClassRelation]] = None,
+        graph: ConceptGraph,
         multiedges: Optional[Dict[str, Set[Concept]]] = None,
     ):
-        # initialize concept graph
-        super().__init__(nodes=eq_classes or [], edges=eq_relations or [])
-
         # storage for multigraph edges
         self.edges: List[tuple[str, str, str, dict]] = []
         self.adjacency: Dict[str, List[str]] = defaultdict(list)
