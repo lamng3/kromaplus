@@ -21,10 +21,7 @@ class HypergraphView(ConceptGraph):
         extra_hyperedges: Optional[Dict[str, Set[Concept]]] = None,
     ):  
         # initialize concept graph
-        super().__init__(
-            nodes=eq_classes or [],
-            edges=eq_relations or []
-        )
+        super().__init__(nodes=eq_classes or [], edges=eq_relations or [])
         
         # hypergraph view
         self.hyperedges: Dict[str, Set[Concept]] = {}
@@ -86,6 +83,72 @@ class HypergraphView(ConceptGraph):
     def __str__(self) -> str:
         return
 
-class Multigraph:
-    def __init__(self):
-        pass
+class MultigraphView(ConceptGraph):
+    """
+    allow multiple parallel edges and loops.
+    edges allow more than one edge between same two vertices, and self-loops.
+
+    adjacency maps each source node id to a list of outgoing edge ids.
+    reverse_adjacency maps each target node id to a list of incoming edge ids.
+    """
+    def __init__(
+        self,
+        eq_classes: Optional[List[EquivalentClass]] = None,
+        eq_relations: Optional[List[EquivalentClassRelation]] = None,
+        multiedges: Optional[Dict[str, Set[Concept]]] = None,
+    ):
+        # initialize concept graph
+        super().__init__(nodes=eq_classes or [], edges=eq_relations or [])
+
+        # storage for multigraph edges
+        self.edges: List[tuple[str, str, str, dict]] = []
+        self.adjacency: Dict[str, List[str]] = defaultdict(list)
+        self.reverse_adjacency: Dict[str, List[str]] = defaultdict(list)
+
+        if multiedges:
+            for edge_id, src_id, tgt_id, metadata in multiedges:
+                self.add_edge(edge_id, src_id, tgt_id, metadata)
+
+    def add_edge(
+        self,
+        edge_id: str,
+        src_id: str,
+        tgt_id: str,
+        metadata: Optional[dict] = None,
+    ) -> None:
+        """add a parallel edge or loop to the multigraph"""
+        if src_id not in self.nodes or tgt_id not in self.nodes:
+            raise KeyError("Node not found in base graph")
+        meta = metadata or {}
+        self.edges.append((edge_id, src_id, tgt_id, meta))
+        self.adjacency[src_id].append(edge_id)
+        self.reverse_adjacency[tgt_id].append(edge_id)
+
+    def remove_edge(self, edge_id: str) -> bool:
+        """remove all edges with the given id"""
+        found = False
+        for e in list(self.edges):
+            if e[0] == edge_id:
+                _, src_id, tgt_id, _ = e
+                self.edges.remove(e)
+                self.adjacency[src_id].remove(edge_id)
+                self.reverse_adjacency[tgt_id].remove(edge_id)
+                found = True
+        return found
+
+    def edges_between(self, src_id: str, tgt_id: str) -> List[str]:
+        """list edge ids connecting src_id to tgt_id"""
+        return [eid for eid, s, t, _ in self.edges if s == src_id and t == tgt_id]
+
+    def incident_edges(self, node_id: str) -> List[str]:
+        """list edge ids incident to node_id (including loops)"""
+        out = list(self.adjacency.get(node_id, []))
+        inc = list(self.reverse_adjacency.get(node_id, []))
+        # build a new dictinary whose keys are items in the concatenated list in order
+        return list(dict.fromkeys(out + inc))
+
+    def __repr__(self) -> str:
+        return f"MultigraphView(#nodes={len(self.nodes)}, #edges={len(self.edges)})"
+
+    def __str__(self) -> str:
+        return
