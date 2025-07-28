@@ -51,3 +51,6 @@ def test_two_hop_from_root(small_graph):
     A = small_graph.nodes["A"]
     sampled = neighborhood_sample(small_graph, center=A, max_hops=2)
     assert ids(sampled) == {"B", "C", "D"}
+
+if __name__ == "__main__":
+    pytest.main()

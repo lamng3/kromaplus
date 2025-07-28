@@ -60,5 +60,5 @@ python main.py
 Tests are generated with the help of `gpt-o4-mini`
 
 ```
-pytest
+pytest -s
 ```

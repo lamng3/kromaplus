@@ -61,3 +61,6 @@ def test_chain_graph_preserves_hierarchy():
     # edges should preserve the same sequence
     seq = [(e.src.id, e.tgt.id) for e in refined.edges]
     assert seq == [("A", "B"), ("B", "D")]
+
+if __name__ == "__main__":
+    pytest.main()
