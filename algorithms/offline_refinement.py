@@ -22,100 +22,114 @@ def offline_refine_graph(graph: ConceptGraph) -> ConceptGraph:
     ranks = G.compute_ranks()
     max_rank = max(ranks.values(), default=0)
 
-    # build buckets Bi
-    B: List[Set[str]] = [
+    # build buckets B0...Bρ
+    B = [
         {nid for nid, r in ranks.items() if r == i}
         for i in range(max_rank + 1)
     ]
 
-    # initialize partition P = [B0, B1, ...] by rank
-    P: List[Set[str]] = [set(bucket) for bucket in B]
+    # initial partition P = [B0, B1, …]
+    P = [set(bucket) for bucket in B]
 
     # iterate over ranks
     for i in range(max_rank + 1):
-        # find Di = blocks fully contained in Bi
+        # find Di = blocks wholly contained in Bi
         Di = [block for block in P if block.issubset(B[i])]
 
         # collapse each block in Di
         for block in Di:
-            merge_id = _collapse_block(G, block)
+            new_id = _collapse_block(G, block)
             P.remove(block)
-            P.append({merged_id})
+            P.append({new_id})
 
-        # for each node c of rank i, split larger blocks
+        # split blocks C in U_{j>i} B_j by adjacency to each c belonging to Bi
+        higher_union = set().union(*(B[j] for j in range(i + 1, max_rank + 1)))
         for cid in B[i]:
+            # skip cid that was merged away
+            if cid not in G.nodes:
+                continue
             center = G.nodes[cid]
-            # any block with some members in higher-rank buckets
-            higher_blocks = [
-                blk for blk in P
-                if any(ranks[nid] > i for nid in blk)
-            ]
-            for blk in higher_blocks:
-                C1, C2 = _split_block_by_center(G, blk, center)
-                if C1 and C2:
-                    P.remove(blk)
-                    P.extend([C1, C2])
+            for blk in list(P):
+                if blk and blk.issubset(higher_union):
+                    C1, C2 = _split_block_by_center(G, blk, center)
+                    if C1 and C2:
+                        P.remove(blk)
+                        P.extend([C1, C2])
     
     return G
 
 def _collapse_block(
-    G: ConceptGraph,
+    graph: ConceptGraph,
     ids_to_merge: Set[str]
 ) -> str:
     """
-    merges all EquivalentClass nodes with IDs in ids_to_merge into one.
-    Returns the new node's ID.
+    merges all EquivalentClass nodes with id in ids_to_merge into one.
+    returns the new node's id.
     """
     from algorithms.data_structures.graph import EquivalentClass, EquivalentClassRelation
 
-    # gather and merge concepts
-    ecs = [G.nodes[nid] for nid in sorted(ids_to_merge)]
-    merged = EquivalentClass(
-        equiv_concepts=list(chain.from_iterable(ec.equiv_concepts for ec in ecs))
-    )
-    merged.id = "+".join(sorted(ids_to_merge))
+    # collect EquivalentClass instances to merge
+    equivalence_nodes = [graph.nodes[nid] for nid in sorted(ids_to_merge)]
+
+    # create the merged EquivalentClass with combined concepts
+    merged_concepts = list(chain.from_iterable(ec.equiv_concepts for ec in equivalence_nodes))
+    merged_node = EquivalentClass(equiv_concepts=merged_concepts)
+    merged_node.id = "+".join(sorted(ids_to_merge))
 
     # rewire edges
-    new_edges: List[EquivalentClassRelation] = []
-    for e in G.edges:
-        src_id, tgt_id = e.src.id, e.tgt.id
-        new_src = merged if src_id in ids_to_merge else G.nodes[src_id]
-        new_tgt = merged if tgt_id in ids_to_merge else G.nodes[tgt_id]
-        new_edges.append(EquivalentClassRelation(new_src, new_tgt, e.relation, e.score))
+    updated_edges: List[EquivalentClassRelation] = []
+    for edge in graph.edges:
+        src = merged_node if edge.src.id in ids_to_merge else graph.nodes[edge.src.id]
+        tgt = merged_node if edge.tgt.id in ids_to_merge else graph.nodes[edge.tgt.id]
+        # preserve relation type and score
+        updated_edges.append(
+            EquivalentClassRelation(src=src, tgt=tgt, relation=edge.relation, score=edge.score)
+        )
 
-    # replace nodes & edges in the graph
+    # replace nodes and edges in the graph
     for nid in ids_to_merge:
-        del G.nodes[nid]
-    G.nodes[merged.id] = merged
-    G.edges = new_edges
+        del graph.nodes[nid]
+    graph.nodes[merged_node.id] = merged_node
+    graph.edges = updated_edges
 
     # rebuild adjacency lists
-    G.parents.clear()
-    G.children.clear()
-    for e in new_edges:
-        G.parents[e.tgt.id].append(e.src)
-        G.children[e.src.id].append(e.tgt)
+    graph.parents.clear()
+    graph.children.clear()
+    for edge in updated_edges:
+        graph.parents[edge.tgt.id].append(edge.src)
+        graph.children[edge.src.id].append(edge.tgt)
 
-    return merged.id
+    return merged_node.id
+
+def _get_adjacent_ids(
+    graph: ConceptGraph,
+    center: EquivalentClass,
+) -> set[str]:
+    """
+    return set of all node ids that are directly connected to center
+    either as a parent or a child
+    """
+    parents = {ec.id for ec in graph.parents_of(center)}
+    children = {ec.id for ec in graph.children_of(center)}
+    return parents.union(children)
 
 def _split_block_by_center(
-    G: ConceptGraph,
+    graph: ConceptGraph,
     block: Set[str],
     center: EquivalentClass
 ) -> (Set[str], Set[str]):
     """
     splits block into two sets:
-        * C1 = IDs adjacent to center
+        * C1 = ids adjacent to center
         * C2 = the rest
     """
     # adjacency of center
-    adj = {
-        ec.id
-        for ec in G.parents_of(center)
-    } | {
-        ec.id
-        for ec in G.children_of(center)
-    }
-    C1 = {nid for nid in block if nid in adj}
-    C2 = block - C1
+    adjacent_ids = _get_adjacent_ids(graph, center)
+
+    # C1 = ids in block that touch the center
+    C1 = {nid for nid in block if nid in adjacent_ids}
+
+    # C2 = everything else
+    C2 = block.difference(C1)
+
     return C1, C2
